@@ -2,66 +2,95 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>VIMS Cascade File Namer</title>
+    <title>VIMS News Story File Namer</title>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; line-height: 1.6; color: #333; }
-        .box { border: 2px solid #00313C; padding: 20px; border-radius: 8px; background: #f9f9f9; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; }
-        input[type="text"] { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .tag-group { margin-bottom: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 40px auto; line-height: 1.6; color: #333; }
+        .box { border: 2px solid #00313C; padding: 30px; border-radius: 12px; background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .vims-header { background: #00313C; color: #F0B323; padding: 15px; margin: -30px -30px 20px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+        label { font-weight: bold; display: block; margin-top: 20px; margin-bottom: 8px; color: #00313C; }
+        input[type="text"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; transition: border-color 0.3s; }
+        input[type="text"]:focus { border-color: #00313C; outline: none; }
+        .tag-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
         .tag-btn { 
-            display: inline-block; padding: 6px 12px; margin: 4px; border: 1px solid #00313C; 
-            border-radius: 20px; cursor: pointer; background: white; font-size: 13px;
+            padding: 8px 14px; border: 1px solid #00313C; border-radius: 25px; 
+            cursor: pointer; background: #fff; font-size: 13px; font-weight: 500;
+            transition: all 0.2s ease;
         }
-        .tag-btn.active { background: #00313C; color: white; }
-        .result-box { background: #eef; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 1.1em; border: 1px dashed #00313C; margin-top: 20px; word-break: break-all; }
-        h3 { color: #00313C; margin-top: 0; }
+        .tag-btn:hover { background: #f0f7f8; }
+        .tag-btn.active { background: #00313C; color: #fff; transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .result-box { 
+            background: #f4f4f4; padding: 20px; border-radius: 8px; font-family: 'Courier New', Courier, monospace; 
+            font-size: 1.2em; border: 2px dashed #00313C; margin-top: 15px; word-break: break-all; color: #00313C;
+        }
+        .instruction-step { font-size: 0.9em; color: #555; margin-top: 10px; }
+        .highlight { color: #00313C; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h3>Cascade File Namer</h3>
-    <p><small>Enter your story title and select 1-2 tags to generate a tracking-ready filename.</small></p>
+    <div class="vims-header">
+        <h2 style="margin:0;">VIMS Story File Namer</h2>
+    </div>
     
-    <label>1. Story Title</label>
-    <input type="text" id="titleInput" placeholder="e.g. New Study on Oyster Restoration" oninput="updateFilename()">
+    <label for="titleInput">1. Story Title</label>
+    <input type="text" id="titleInput" placeholder="Enter the headline here..." oninput="updateFilename()">
 
-    <label>2. Select Tracking Tags</label>
-    <div id="tagContainer" class="tag-group">
-        </div>
+    <label>2. Select Tracking Tags <span style="font-weight: normal; font-size: 0.8em;">(Select 1-2)</span></label>
+    <div id="tagContainer" class="tag-group"></div>
 
-    <label>3. Your Cascade "System Name"</label>
+    <label>3. Your Cascade File Name</label>
     <div class="result-box" id="result">...waiting for title...</div>
-    <p><small>Copy and paste this into the <strong>System Name</strong> field in Cascade.</small></p>
+    
+    <div class="instruction-step">
+        <strong>How to use this:</strong> Copy this file name, right-click on your story file in Cascade, select <span class="highlight">"More"</span>, select <span class="highlight">"Rename"</span>, and then paste the new file name.
+    </div>
 </div>
 
 <script>
-    const tags = [
-        "nat-res", "coastal-ocean", "eco-health", "oysters", "blue-crabs", 
-        "striped-bass", "seagrass", "aquaculture", "resilience", "climate", 
-        "batten", "event", "journal", "award", "alumni"
-    ];
+    // Mapping Human Names to the URL keywords for GTM tracking
+    const tagMapping = {
+        "Natural Resources": "nat-res",
+        "Coastal & Ocean Processes": "coastal-ocean",
+        "Ecosystem Health": "eco-health",
+        "Oysters": "oysters",
+        "Blue Crabs": "blue-crabs",
+        "Striped Bass": "striped-bass",
+        "Seagrass": "seagrass",
+        "Aquaculture": "aquaculture",
+        "Coastal Resilience": "resilience",
+        "Climate Change": "climate",
+        "Restoration": "restoration",
+        "Batten School": "batten",
+        "Public Event": "event",
+        "Research Publication": "journal",
+        "Award & Recognition": "award",
+        "Alumni": "alumni",
+        "Giving": "giving",
+        "Chesapeake Bay": "bay",
+        "Annual Survey": "survey",
+        "Fisheries Management": "fisheries"
+    };
 
     let selectedTags = new Set();
 
     function setupTags() {
         const container = document.getElementById('tagContainer');
-        tags.forEach(tag => {
+        Object.keys(tagMapping).forEach(humanName => {
             const btn = document.createElement('div');
             btn.className = 'tag-btn';
-            btn.innerText = tag;
-            btn.onclick = () => toggleTag(tag, btn);
+            btn.innerText = humanName;
+            btn.onclick = () => toggleTag(humanName, btn);
             container.appendChild(btn);
         });
     }
 
-    function toggleTag(tag, element) {
-        if (selectedTags.has(tag)) {
-            selectedTags.delete(tag);
+    function toggleTag(humanName, element) {
+        if (selectedTags.has(humanName)) {
+            selectedTags.delete(humanName);
             element.classList.remove('active');
         } else {
-            selectedTags.add(tag);
+            selectedTags.add(humanName);
             element.classList.add('active');
         }
         updateFilename();
@@ -72,16 +101,16 @@
         
         // Clean the title for SEO
         let cleanTitle = title.toLowerCase()
-            .replace(/[^\w\s-]/g, '') // Remove special chars
+            .replace(/[^\w\s-]/g, '') 
             .trim()
-            .replace(/\s+/g, '-');    // Spaces to hyphens
+            .replace(/\s+/g, '-');    
 
-        // Combine with tags
-        let tagString = Array.from(selectedTags).join('-');
+        // Pull the short keywords for the URL
+        let urlKeywords = Array.from(selectedTags).map(name => tagMapping[name]);
         let finalName = cleanTitle;
         
-        if (tagString) {
-            finalName += '-' + tagString;
+        if (urlKeywords.length > 0) {
+            finalName += '-' + urlKeywords.join('-');
         }
 
         document.getElementById('result').innerText = finalName + ".php";
