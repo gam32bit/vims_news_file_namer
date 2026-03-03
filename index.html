@@ -40,6 +40,7 @@
         
         .instruction-step { font-size: 0.95em; color: #444; background: #fff; padding: 15px; border-radius: 6px; border-left: 4px solid #ad5410; }
         .highlight { color: #00467F; font-weight: bold; text-decoration: underline; }
+        .length-warning { display: none; font-size: 0.9em; color: #b45309; margin-top: 12px; }
     </style>
 </head>
 <body>
@@ -68,6 +69,9 @@
         <div class="result-container">
             <div class="result-box" id="result">...waiting for title...</div>
             
+            <div class="length-warning" id="lengthWarning">
+                &#9888; File name is over 80 characters — consider shortening your page title.
+            </div>
             <div class="instruction-step">
                 <strong>Next Step:</strong> Copy this file name, right-click on your story file in Cascade, select <span class="highlight">"More"</span>, select <span class="highlight">"Rename"</span>, and then paste the new file name.
             </div>
@@ -137,13 +141,10 @@
     function updateFilename() {
         let title = document.getElementById('titleInput').value;
         
-        // Clean the title for SEO, limited to 6 words for URL readability
+        // Clean the title for SEO
         let cleanTitle = title.toLowerCase()
             .replace(/[^\w\s-]/g, '')
             .trim()
-            .split(/\s+/)
-            .slice(0, 6)
-            .join(' ')
             .replace(/\s+/g, '-');
 
         // Pull the short keywords
@@ -155,10 +156,13 @@
         }
 
         const display = document.getElementById('result');
+        const warning = document.getElementById('lengthWarning');
         if (title.length > 0) {
             display.innerText = finalName;
+            warning.style.display = finalName.length > 80 ? 'block' : 'none';
         } else {
             display.innerText = "...waiting for title...";
+            warning.style.display = 'none';
         }
     }
 
