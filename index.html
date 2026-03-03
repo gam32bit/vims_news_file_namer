@@ -137,11 +137,14 @@
     function updateFilename() {
         let title = document.getElementById('titleInput').value;
         
-        // Clean the title for SEO
+        // Clean the title for SEO, limited to 6 words for URL readability
         let cleanTitle = title.toLowerCase()
-            .replace(/[^\w\s-]/g, '') 
+            .replace(/[^\w\s-]/g, '')
             .trim()
-            .replace(/\s+/g, '-');    
+            .split(/\s+/)
+            .slice(0, 6)
+            .join(' ')
+            .replace(/\s+/g, '-');
 
         // Pull the short keywords
         let urlKeywords = Array.from(selectedTags.values());
